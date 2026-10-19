@@ -54,6 +54,14 @@ Paste a sample of your app's CLI or Streamlit output here so a reader can see wh
 #   ...
 ```
 
+```
+# Today's Schedule
+# Owner: Jordan | Available time: 45 minutes
+# - Mochi (dog): Breakfast (10 min, high priority)
+# - Mochi (dog): Morning walk (25 min, high priority)
+```
+
+
 ## 🧪 Testing PawPal+
 
 ```bash
@@ -68,27 +76,52 @@ Sample test output:
 
 ```
 # Paste your pytest output here
+================== test session starts ==================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.7.0
+rootdir: C:\Users\gmasg\Downloads\ai110-module2show-pawpal-starter
+plugins: anyio-4.15.1
+collected 6 items                                        
+
+test_pawpal_system.py ....                         [ 66%]
+tests\test_pawpal.py ..                            [100%]
+
+=================== 6 passed in 0.05s ===================
 ```
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
+PawPal+ includes these scheduling behaviors:
 
-| Feature | Method(s) | Notes |
-|---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+- **Sorting — `Scheduler.sort_tasks()`**: Orders tasks by priority (high, medium,
+  low), then by shorter duration. It sorts a copy and leaves the source list
+  unchanged.
+- **Filtering — `Scheduler.filter_tasks()`**: Selects tasks by completion
+  status, pet name, or both. Pet-name matching ignores capitalization.
+- **Conflict detection — `Scheduler.detect_conflicts()`**: Compares scheduled
+  time intervals for incomplete tasks and returns warning messages for
+  overlaps, including overlaps across different pets. Tasks without a scheduled
+  start time are ignored; conflicts do not stop the program.
+- **Recurring tasks — `Task.mark_complete()`, `Pet.mark_task_complete()`, and
+  `Scheduler.mark_task_complete()`**: Completing a daily or weekly task creates
+  a fresh, incomplete task due one or seven days after the completion date. The
+  Pet and Scheduler methods append it to the pet's task list; the scheduler
+  method also invalidates its cached plan.
+- **Time-limited plan — `Scheduler.generate_plan()`**: Builds a plan from all
+  pets' incomplete tasks, ordered by priority and duration, fitting tasks within
+  the owner's available minutes and recording tasks that do not fit.
 
 ## 📸 Demo Walkthrough
 
-Describe your app in numbered steps so a reader can follow along without watching a video:
+### Implementation summary
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+PawPal+ models care activities as Task dataclasses, including a description, duration, frequency, priority, completion status, due date, and optional scheduled start time. The Scheduler can warn when scheduled intervals overlap. When a daily or weekly task is marked complete, its Pet keeps the completed task and adds a new task due one or seven days after completion. Each Pet stores its own tasks, while an Owner manages multiple pets and provides get_all_tasks() to collect their tasks together. The Scheduler uses that owner-wide task list to skip completed tasks, order remaining tasks by priority and then duration, and fit as many as possible into the owner's available minutes.
+
+### Run the demo
+
+1. Create the owner with the amount of time available for pet care.
+2. Add the owner's pets and give each pet its care tasks.
+3. Create a Scheduler for the owner; it retrieves tasks from every pet through Owner.get_all_tasks()
+4. Generate the plan. The scheduler prioritizes high-priority tasks, sorts ties by shorter duration, and skips tasks that do not fit the remaining time.
+5. Run python main.py to print today's schedule, including the pet associated with each selected task, and a warning if scheduled tasks overlap.
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->

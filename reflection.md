@@ -19,8 +19,10 @@
 **b. Design changes**
 
 - Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
+    Yes.
 
+- If yes, describe at least one change and why you made it.
+    I made the Scheduler use the Owner rather than a single Pet. The Owner's get_all_tasks() method lets the scheduler consider tasks for every pet, which is necessary for a household with multiple pets. I also added task frequency and made the scheduler skip completed tasks and tasks that do not fit the owner's available time.
 ---
 
 ## 2. Scheduling Logic and Tradeoffs
@@ -32,8 +34,15 @@
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
+- The conflict checker compares each pair of scheduled, incomplete tasks and
+  checks their full time intervals, not just whether their start times match.
+  This catches partial overlaps, but comparing pairs takes O(n²) time as the
+  number of scheduled tasks grows.
+- I considered using Python's `itertools.combinations` to produce each pair.
+  That is concise and avoids making list slices, but the explicit nested loop
+  makes it easier for me to follow how each pair is checked. Pet-care schedules
+  are small, so I kept the more direct version; its extra work is reasonable
+  for this scenario.
 
 ---
 

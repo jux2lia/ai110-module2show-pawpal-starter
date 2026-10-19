@@ -12,19 +12,27 @@ classDiagram
         +str species
         +list~Task~ tasks
         +add_task(task: Task) None
-        +edit_task(title: str, duration: int, priority: str) None
+        +mark_task_complete(task: Task, completed_on: date) Task|None
+        +edit_task(description: str, duration_minutes: int, frequency: str, priority: str) None
     }
 
     class Task {
-        +str title
+        +str description
         +int duration_minutes
+        +str frequency
         +str priority
         +bool completed
-        +mark_complete() None
+        +date due_date
+        +time scheduled_time
+        +mark_complete(completed_on: date) Task|None
     }
 
     class Scheduler {
         +Owner owner
+        +sort_tasks(tasks: list~Task~) list~Task~
+        +filter_tasks(completed: bool, pet_name: str) list~Task~
+        +mark_task_complete(task: Task, completed_on: date) Task|None
+        +detect_conflicts() list~str~
         +generate_plan() list~Task~
         +explain_plan() str
     }
