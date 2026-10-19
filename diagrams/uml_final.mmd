@@ -1,0 +1,51 @@
+classDiagram
+    class Task {
+        +str description
+        +int duration_minutes
+        +str frequency
+        +str priority
+        +bool completed
+        +date due_date
+        +time scheduled_time
+        +__post_init__() None
+        +title str
+        +mark_complete(completed_on: date | None) Task | None
+    }
+
+    class Pet {
+        +str name
+        +str species
+        +list~Task~ tasks
+        +__post_init__() None
+        +add_task(task: Task) None
+        +mark_task_complete(task: Task, completed_on: date | None) Task | None
+        +edit_task(description: str, duration_minutes: int | None, frequency: str | None, priority: str | None) None
+    }
+
+    class Owner {
+        +str name
+        +int available_minutes
+        +list~Pet~ pets
+        +__post_init__() None
+        +add_pet(pet: Pet) None
+        +get_all_tasks() list~Task~
+    }
+
+    class Scheduler {
+        +Owner owner
+        -list~Task~ _plan
+        -list~Task~ _omitted_tasks
+        -bool _has_generated_plan
+        +sort_tasks(tasks: list~Task~ | None) list~Task~
+        +sort_tasks_by_time(tasks: list~Task~ | None) list~Task~
+        +filter_tasks(completed: bool | None, pet_name: str | None) list~Task~
+        +mark_task_complete(task: Task, completed_on: date | None) Task | None
+        +detect_conflicts() list~str~
+        +generate_plan() list~Task~
+        +explain_plan() str
+    }
+
+    Owner "1" *-- "0..*" Pet : manages
+    Pet "1" *-- "0..*" Task : stores
+    Scheduler --> Owner : uses all pets' tasks
+    Task ..> Task : creates next daily or weekly occurrence

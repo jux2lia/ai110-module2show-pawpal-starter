@@ -95,6 +95,21 @@ def test_scheduler_sorts_tasks_by_priority_then_duration() -> None:
     ]
 
 
+def test_scheduler_sorts_tasks_in_chronological_order() -> None:
+    late_task = Task("Evening feed", 10, scheduled_time=time(18, 0))
+    early_task = Task("Morning walk", 20, scheduled_time=time(7, 30))
+    unscheduled_task = Task("Grooming", 15)
+    owner = Owner(
+        "Jordan",
+        available_minutes=60,
+        pets=[Pet("Mochi", "dog", [late_task, unscheduled_task, early_task])],
+    )
+
+    sorted_tasks = Scheduler(owner).sort_tasks_by_time()
+
+    assert sorted_tasks == [early_task, late_task, unscheduled_task]
+
+
 def test_scheduler_filters_by_completion_status_and_pet_name() -> None:
     completed_task = Task("Completed walk", 20, completed=True)
     open_task = Task("Open walk", 15)
@@ -184,6 +199,23 @@ def test_scheduler_warns_when_tasks_for_different_pets_overlap() -> None:
     assert "Morning walk for Mochi" in warnings[0]
     assert "Breakfast for Miso" in warnings[0]
     assert "08:15-08:30" in warnings[0]
+
+
+def test_scheduler_warns_when_two_tasks_have_the_same_start_time() -> None:
+    pet = Pet(
+        "Mochi",
+        "dog",
+        [
+            Task("Walk", 30, scheduled_time=time(8, 0)),
+            Task("Breakfast", 15, scheduled_time=time(8, 0)),
+        ],
+    )
+
+    warnings = Scheduler(Owner("Jordan", 60, [pet])).detect_conflicts()
+
+    assert len(warnings) == 1
+    assert "Walk for Mochi" in warnings[0]
+    assert "Breakfast for Mochi" in warnings[0]
 
 
 def test_scheduler_does_not_warn_for_nonoverlapping_or_completed_tasks() -> None:

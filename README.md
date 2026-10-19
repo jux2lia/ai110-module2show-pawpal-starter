@@ -92,9 +92,11 @@ tests\test_pawpal.py ..                            [100%]
 
 PawPal+ includes these scheduling behaviors:
 
-- **Sorting — `Scheduler.sort_tasks()`**: Orders tasks by priority (high, medium,
-  low), then by shorter duration. It sorts a copy and leaves the source list
-  unchanged.
+- **Priority sorting — `Scheduler.sort_tasks()`**: Orders tasks by priority
+  (high, medium, low), then by shorter duration. It sorts a copy and leaves the
+  source list unchanged.
+- **Chronological sorting — `Scheduler.sort_tasks_by_time()`**: Orders tasks by
+  scheduled start time and places tasks without a start time at the end.
 - **Filtering — `Scheduler.filter_tasks()`**: Selects tasks by completion
   status, pet name, or both. Pet-name matching ignores capitalization.
 - **Conflict detection — `Scheduler.detect_conflicts()`**: Compares scheduled
@@ -110,18 +112,69 @@ PawPal+ includes these scheduling behaviors:
   pets' incomplete tasks, ordered by priority and duration, fitting tasks within
   the owner's available minutes and recording tasks that do not fit.
 
-## 📸 Demo Walkthrough
+## Demo Walkthrough
 
-### Implementation summary
+### What you can do in the Streamlit app
 
-PawPal+ models care activities as Task dataclasses, including a description, duration, frequency, priority, completion status, due date, and optional scheduled start time. The Scheduler can warn when scheduled intervals overlap. When a daily or weekly task is marked complete, its Pet keeps the completed task and adds a new task due one or seven days after completion. Each Pet stores its own tasks, while an Owner manages multiple pets and provides get_all_tasks() to collect their tasks together. The Scheduler uses that owner-wide task list to skip completed tasks, order remaining tasks by priority and then duration, and fit as many as possible into the owner's available minutes.
+- Set the owner's name and available care time.
+- Add multiple pets and choose each pet's species.
+- Add tasks to a selected pet with a description, duration, frequency, priority, and optional scheduled start time.
+- Browse tasks in a table, filter by pet and completion status, and see tasks ordered by scheduled time. Unscheduled tasks appear after timed tasks.
+- Mark an unfinished task complete. Daily and weekly tasks create a new occurrence with the next due date.
+- Generate a time-limited plan and see conflict warnings for overlapping scheduled task intervals.
 
-### Run the demo
+### Example workflow
 
-1. Create the owner with the amount of time available for pet care.
-2. Add the owner's pets and give each pet its care tasks.
-3. Create a Scheduler for the owner; it retrieves tasks from every pet through Owner.get_all_tasks()
-4. Generate the plan. The scheduler prioritizes high-priority tasks, sorts ties by shorter duration, and skips tasks that do not fit the remaining time.
-5. Run python main.py to print today's schedule, including the pet associated with each selected task, and a warning if scheduled tasks overlap.
+1. Run `streamlit run app.py` and enter the owner's available care time.
+2. Use **Add a Pet** to add a dog named Mochi and a cat named Miso.
+3. Use **Schedule a Task** to add Mochi's 25-minute morning walk at 8:00 and Miso's 20-minute playtime at 8:00, plus other care tasks.
+4. Review the task table. Use the status and pet filters to narrow the displayed tasks; the scheduler reports that the walk and playtime overlap.
+5. Select **Generate schedule** to see incomplete tasks prioritized by priority and duration and fitted within the available time. Use a task's **Mark complete** button to complete it; a daily or weekly task will get a fresh occurrence.
+
+### CLI example
+
+Run `python main.py` to see sorting, filtering, the conflict warning, and the generated time-limited plan:
+
+```text
+Tasks sorted by priority, then duration:
+- Breakfast (10 min, high, incomplete)
+- Morning walk (25 min, high, incomplete)
+- Playtime (20 min, medium, incomplete)
+- Brush coat (5 min, low, complete)
+
+Incomplete tasks:
+- Morning walk
+- Playtime
+- Breakfast
+
+Tasks for Miso:
+- Playtime
+- Breakfast
+
+Schedule conflict check:
+Warning: Morning walk for Mochi (08:00-08:25) overlaps with Playtime for Miso (08:00-08:20).
+
+Today's Schedule
+Owner: Jordan | Available time: 50 minutes
+- Miso (cat): Breakfast (10 min, high priority)
+- Mochi (dog): Morning walk (25 min, high priority)
+```
+
+### Testing PawPal+
+
+```
+=================== test session starts ===================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.7.0
+rootdir: C:\Users\gmasg\Downloads\ai110-module2show-pawpal-starter
+plugins: anyio-4.15.1
+collected 16 items                                         
+
+test_pawpal_system.py ..............                 [ 87%]
+tests\test_pawpal.py ..                              [100%]
+
+=================== 16 passed in 0.06s ====================
+```
+
+
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->

@@ -95,28 +95,57 @@ st.subheader("Your Pets and Tasks")
 if not owner.pets:
     st.info("No pets have been added yet.")
 else:
+    task_scheduler = Scheduler(owner)
+    filter_col, pet_filter_col = st.columns(2)
+    with filter_col:
+        status_filter = st.selectbox(
+            "Task status",
+            ["All", "Incomplete", "Completed"],
+        )
+    with pet_filter_col:
+        pet_filter = st.selectbox(
+            "Pet",
+            ["All pets", *[pet.name for pet in owner.pets]],
+        )
+
+    completed_filter = {
+        "All": None,
+        "Incomplete": False,
+        "Completed": True,
+    }[status_filter]
+    selected_pet = None if pet_filter == "All pets" else pet_filter
+    visible_tasks = task_scheduler.filter_tasks(
+        completed=completed_filter,
+        pet_name=selected_pet,
+    )
+    visible_tasks = task_scheduler.sort_tasks_by_time(visible_tasks)
+    if visible_tasks:
+        st.table(
+            [
+                {
+                    "Pet": pet.name,
+                    "Task": task.description,
+                    "Start time": (
+                        task.scheduled_time.strftime("%H:%M")
+                        if task.scheduled_time is not None
+                        else "Not scheduled"
+                    ),
+                    "Duration (minutes)": task.duration_minutes,
+                    "Due date": task.due_date.isoformat(),
+                    "Priority": task.priority,
+                    "Completed": task.completed,
+                }
+                for task in visible_tasks
+                for pet in owner.pets
+                if any(existing is task for existing in pet.tasks)
+            ]
+        )
+    else:
+        st.info("No tasks match those filters.")
+
     for pet_index, pet in enumerate(owner.pets):
         st.markdown(f"**{pet.name}** ({pet.species})")
-        if pet.tasks:
-            st.table(
-                [
-                    {
-                        "Task": task.description,
-                        "Duration (minutes)": task.duration_minutes,
-                        "Frequency": task.frequency,
-                        "Due date": task.due_date.isoformat(),
-                        "Start time": (
-                            task.scheduled_time.strftime("%H:%M")
-                            if task.scheduled_time is not None
-                            else "Not scheduled"
-                        ),
-                        "Priority": task.priority,
-                        "Completed": task.completed,
-                    }
-                    for task in pet.tasks
-                ]
-            )
-        else:
+        if not pet.tasks:
             st.caption("No tasks yet.")
         for task_index, task in enumerate(pet.tasks):
             if not task.completed and st.button(
@@ -136,8 +165,13 @@ else:
 
 st.divider()
 st.subheader("Today's Schedule")
-for warning in Scheduler(owner).detect_conflicts():
-    st.warning(warning)
+display_scheduler = Scheduler(owner)
+conflict_warnings = display_scheduler.detect_conflicts()
+if conflict_warnings:
+    for warning in conflict_warnings:
+        st.warning(warning)
+else:
+    st.success("No scheduling conflicts detected.")
 
 if st.button("Generate schedule"):
     scheduler = Scheduler(owner)
@@ -147,7 +181,8 @@ if st.button("Generate schedule"):
 scheduler = st.session_state.scheduler
 if scheduler is not None:
     st.write(scheduler.explain_plan())
-    for task in st.session_state.schedule:
+    chronological_plan = scheduler.sort_tasks_by_time(st.session_state.schedule)
+    for task in chronological_plan:
         pet = next(
             pet for pet in owner.pets if any(existing is task for existing in pet.tasks)
         )

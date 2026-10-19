@@ -158,6 +158,21 @@ class Scheduler:
             key=lambda task: (priority_rank[task.priority], task.duration_minutes),
         )
 
+    def sort_tasks_by_time(self, tasks: list[Task] | None = None) -> list[Task]:
+        """Sort scheduled tasks chronologically, placing unscheduled tasks last.
+
+        Uses all owner tasks when ``tasks`` is omitted and leaves the input list
+        unchanged.
+        """
+        tasks_to_sort = self.owner.get_all_tasks() if tasks is None else tasks
+        return sorted(
+            tasks_to_sort,
+            key=lambda task: (
+                task.scheduled_time is None,
+                task.scheduled_time or time.max,
+            ),
+        )
+
     def filter_tasks(
         self,
         completed: bool | None = None,
